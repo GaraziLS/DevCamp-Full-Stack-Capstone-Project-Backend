@@ -1,55 +1,60 @@
-
 from flask import Flask, request, jsonify
 from flask_sqlalchemy import SQLAlchemy
-from sqlalchemy import ForeignKey, Integer, Column, String, UnicodeText, PrimaryKeyConstraint
+from sqlalchemy import ForeignKey
 from flask_marshmallow import Marshmallow
+from flask_cors import CORS
 import os
 
-
-
 app = Flask(__name__)
+CORS(app)  
 
 basedir = os.path.abspath(os.path.dirname(__file__))
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///' + os.path.join(basedir, 'app.sqlite')
 db = SQLAlchemy(app)
 ma = Marshmallow(app)
 
-class user(db.Model):
-    user_id = db.Column(db.Integer, autoincrement= True, primary_key=True)
-    user_email = db.Column(db.String(50), unique=True)
+# User table
+class User(db.Model):
+    user_id = db.Column(db.Integer, autoincrement=True, primary_key=True)
+    user_name = db.Column(db.String(30), unique=True)
+    user_email = db.Column(db.String(50), unique=False)
     user_password = db.Column(db.String(20), unique=False)
 
-    def __init__(self, user_email, user_password):
+    def __init__(self, user_name, user_email, user_password):
+        self.user_name = user_name
         self.user_email = user_email
         self.user_password = user_password
-    
-class userSchema(ma.Schema):
-    class Meta:
-        fields = ("user_email", "user_password")
 
-user_schema = userSchema()
-users_schema = userSchema(many=True)
-
-
-class item(db.Model):
-    item_id = db.Column(db.Integer, autoincrement= True, primary_key=True)
+# Item table
+class Item(db.Model):
+    item_id = db.Column(db.Integer, autoincrement=True, primary_key=True)
     item_title = db.Column(db.String(100), unique=False)
     item_content = db.Column(db.UnicodeText, unique=False)
-    item_user_id = db.Column(db.Integer, ForeignKey(user.user_id))
+    item_user_id = db.Column(db.Integer, ForeignKey('user.user_id'))
 
     def __init__(self, item_title, item_content, item_user_id):
         self.item_title = item_title
         self.item_content = item_content
         self.item_user_id = item_user_id
 
-class itemSchema(ma.Schema):
+# Schemas
+class UserSchema(ma.Schema):
+    class Meta:
+        fields = ("user_name", "user_email", "user_password")
+
+user_schema = UserSchema()
+users_schema = UserSchema(many=True)
+
+# Item schema
+
+class ItemSchema(ma.Schema):
     class Meta:
         fields = ("item_title", "item_content", "item_user_id")
 
-item_schema = itemSchema()
-items_schema = itemSchema(many=True)
+item_schema = ItemSchema()
+items_schema = ItemSchema(many=True)
 
-# Endpoint to create a new item
+# Route to create a new item
 
 @app.route("/create", methods=['POST'])
 def add_item():
@@ -57,16 +62,63 @@ def add_item():
     content = request.json["item_content"]
     item_user_id = request.json["item_user_id"]
 
-    new_item = item(title, content, item_user_id)
+    new_item_instance = Item(title, content, item_user_id)
 
-    db.session.add(new_item)
+    db.session.add(new_item_instance)
     db.session.commit()
 
-    Item = item.query.get(new_item.item_id)
+    item = Item.query.get(new_item_instance.item_id) 
 
     return item_schema.jsonify(item)
 
+# Route to log a user in
+
+@app.route("/login", methods=['POST'])
+def login_user():
+    user_name = request.json["user_name"]
+    user_email = request.json["user_email"]
+    user_password = request.json["user_password"]
+
+    logged_user_instance = User(user_name, user_email, user_password)
+
+    db.session.add(logged_user_instance)
+    db.session.commit()
+
+    logged_user = User.query.get(logged_user_instance.user_id) 
+
+    return user_schema.jsonify(logged_user)
+
+# Route to sign up a new account
+
+@app.route("/signup", methods=['POST'])
+def register_user():
+    user_name = request.json["user_name"]
+    user_email = request.json["user_email"]
+    user_password = request.json["user_password"]
+
+    registered_user_instance = User(user_name, user_email, user_password)
+
+    db.session.add(registered_user_instance)
+    db.session.commit()
+
+    user = User.query.get(registered_user_instance.user_id) 
+
+    return user_schema.jsonify(user)
+
+# Note to myself: Create a function that checks if a username is available or not when signing up.
+
+# Route to get all the items
+
+@app.route("/tables", methods=['GET'])
+def get_items():
+    all_items = Item.query.all()
+    result = items_schema.dump(all_items)
+    return jsonify(result)
+
+def init_db():
+    db.create_all()
 
 if __name__ == '__main__':
+    with app.app_context(): 
+        init_db()  
     app.run(debug=True)
- 
