@@ -115,6 +115,34 @@ def get_items():
     result = items_schema.dump(all_items)
     return jsonify(result)
 
+# Route to get a single item
+
+@app.route("/tables/<id>", methods=['GET'])
+def get_item(id):
+    single_item = Item.query.get(id)
+    return item_schema.jsonify(single_item)
+
+# Route to get a single user
+
+@app.route("/users/<id>", methods=['GET'])
+def get_user(id):
+    single_user = User.query.get(id)
+    return user_schema.jsonify(single_user)
+
+# # Route to get all the blogs of a given user
+
+# @app.route("/tables/users/<id>", methods=["GET"])
+# def get_blogs_from_user(id):
+#     user = User.query.get(id)
+#     get_blogs_from_user = Item.query.all()
+#     result = items_schema.dump(get_blogs_from_user)
+#     return jsonify(user)
+
+# Route to update an item
+
+@app.route("/tables/<id>", methods=["PUT"])
+
+
 def init_db():
     db.create_all()
 
