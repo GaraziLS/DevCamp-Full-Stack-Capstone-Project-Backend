@@ -165,4 +165,4 @@ if __name__ == '__main__':
         init_db()  
     app.run(debug=True)
 
-# TODO: Get a way of getting all the users, as well as another one to update them
+# TODO: Get a way of getting all the users, as well as another one to update the
