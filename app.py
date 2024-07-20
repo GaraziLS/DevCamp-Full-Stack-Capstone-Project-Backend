@@ -122,6 +122,14 @@ def get_item(id):
     single_item = Item.query.get(id)
     return item_schema.jsonify(single_item)
 
+# Route to get all the users
+
+@app.route("/users", methods=['GET'])
+def get_users():
+    all_users = User.query.all
+    result = users_schema.dump(all_users)
+    return jsonify(result)
+
 # Route to get a single user
 
 @app.route("/users/<id>", methods=['GET'])
@@ -129,19 +137,25 @@ def get_user(id):
     single_user = User.query.get(id)
     return user_schema.jsonify(single_user)
 
-# # Route to get all the blogs of a given user
-
-# @app.route("/tables/users/<id>", methods=["GET"])
-# def get_blogs_from_user(id):
-#     user = User.query.get(id)
-#     get_blogs_from_user = Item.query.all()
-#     result = items_schema.dump(get_blogs_from_user)
-#     return jsonify(user)
-
 # Route to update an item
 
 @app.route("/tables/<id>", methods=["PUT"])
+def item_update(id):
+    update_item_query = Item.query.get(id)
+    item_title = request.json["item_title"]
+    item_content = request.json["item_content"]
+    item_user_id = request.json["item_user_id"]
 
+    update_item_query.item_title = item_title
+    update_item_query.item_content = item_content
+    update_item_query.item_user_id = item_user_id
+
+    db.session.commit()
+    return item_schema.jsonify(update_item_query)
+
+# Route to delete an item
+
+@app.route("/tables/<id>", methods=["DELETE"])
 
 def init_db():
     db.create_all()
@@ -150,3 +164,5 @@ if __name__ == '__main__':
     with app.app_context(): 
         init_db()  
     app.run(debug=True)
+
+# TODO: Get a way of getting all the users, as well as another one to update them
