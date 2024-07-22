@@ -19,7 +19,7 @@ class User(db.Model):
     user_id = db.Column(db.Integer, autoincrement=True, primary_key=True)
     user_name = db.Column(db.String(30), unique=True)
     user_email = db.Column(db.String(50), unique=False)
-    user_password = db.Column(db.String(20), unique=False)
+    user_password = db.Column(db.String(100), unique=False)
 
     def __init__(self, user_name, user_email, user_password):
         self.user_name = user_name
@@ -96,18 +96,15 @@ def register_user():
 @app.route("/login", methods=['POST'])
 def login_user():
     user_name = request.json["user_name"]
-    user_email = request.json["user_email"]
     user_password = request.json["user_password"]
 
-    logged_user_instance = User(user_name, user_email, user_password)
+    user = User.query.filter_by(user_name=user_name).first()
 
-    db.session.add(logged_user_instance)
-    db.session.commit()
-
-    logged_user = User.query.get(logged_user_instance.user_id) 
-
-    return user_schema.jsonify(logged_user)
-
+    if user and user.user_password == user_password:
+        return user_schema.jsonify(user)
+    else:
+        return jsonify({"Warning": "Wrong username or password "}), 401
+    
 # Note to myself: Create a function that checks if a username is available or not when signing up.
 
 # Route to get all the items
@@ -182,5 +179,3 @@ if __name__ == '__main__':
     with app.app_context(): 
         init_db()  
     app.run(debug=True)
-
-# TODO: Get a way of getting all the users, as well as another one to update the
