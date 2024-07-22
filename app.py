@@ -5,6 +5,7 @@ from flask_marshmallow import Marshmallow
 from flask_cors import CORS
 import os
 
+
 app = Flask(__name__)
 CORS(app)  
 
@@ -36,6 +37,8 @@ class Item(db.Model):
         self.item_title = item_title
         self.item_content = item_content
         self.item_user_id = item_user_id
+
+
 
 # Schemas
 class UserSchema(ma.Schema):
@@ -71,23 +74,6 @@ def add_item():
 
     return item_schema.jsonify(item)
 
-# Route to log a user in
-
-@app.route("/login", methods=['POST'])
-def login_user():
-    user_name = request.json["user_name"]
-    user_email = request.json["user_email"]
-    user_password = request.json["user_password"]
-
-    logged_user_instance = User(user_name, user_email, user_password)
-
-    db.session.add(logged_user_instance)
-    db.session.commit()
-
-    logged_user = User.query.get(logged_user_instance.user_id) 
-
-    return user_schema.jsonify(logged_user)
-
 # Route to sign up a new account
 
 @app.route("/signup", methods=['POST'])
@@ -104,6 +90,23 @@ def register_user():
     user = User.query.get(registered_user_instance.user_id) 
 
     return user_schema.jsonify(user)
+
+# Route to log a user in
+
+@app.route("/login", methods=['POST'])
+def login_user():
+    user_name = request.json["user_name"]
+    user_email = request.json["user_email"]
+    user_password = request.json["user_password"]
+
+    logged_user_instance = User(user_name, user_email, user_password)
+
+    db.session.add(logged_user_instance)
+    db.session.commit()
+
+    logged_user = User.query.get(logged_user_instance.user_id) 
+
+    return user_schema.jsonify(logged_user)
 
 # Note to myself: Create a function that checks if a username is available or not when signing up.
 
@@ -126,7 +129,7 @@ def get_item(id):
 
 @app.route("/users", methods=['GET'])
 def get_users():
-    all_users = User.query.all
+    all_users = User.query.all()
     result = users_schema.dump(all_users)
     return jsonify(result)
 
@@ -156,6 +159,21 @@ def item_update(id):
 # Route to delete an item
 
 @app.route("/tables/<id>", methods=["DELETE"])
+def delete_item(id):
+    item = Item.query.get(id)
+    db.session.delete(item)
+    db.session.commit()
+    return "Item was deleted"
+
+# Route to delete a user
+
+@app.route("/users/<id>", methods=["DELETE"])
+def delete_user(id):
+    item = User.query.get(id)
+    db.session.delete(item)
+    db.session.commit()
+    return "User account was deleted"
+
 
 def init_db():
     db.create_all()
