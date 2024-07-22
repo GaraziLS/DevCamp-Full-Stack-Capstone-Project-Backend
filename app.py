@@ -4,6 +4,7 @@ from sqlalchemy import ForeignKey
 from flask_marshmallow import Marshmallow
 from flask_cors import CORS
 import os
+from flask_login import LoginManager
 
 
 app = Flask(__name__)
@@ -13,6 +14,11 @@ basedir = os.path.abspath(os.path.dirname(__file__))
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///' + os.path.join(basedir, 'app.sqlite')
 db = SQLAlchemy(app)
 ma = Marshmallow(app)
+
+class login_manager:
+    login_manager = LoginManager()
+
+    login_manager.init_app(app)
 
 # User table
 class User(db.Model):
