@@ -122,14 +122,6 @@ def get_item(id):
     single_item = Item.query.get(id)
     return item_schema.jsonify(single_item)
 
-# Route to get all the users
-
-@app.route("/users", methods=['GET'])
-def get_users():
-    all_users = User.query.all()
-    result = users_schema.dump(all_users)
-    return jsonify(result)
-
 # Route to get a single user
 
 @app.route("/users/<id>", methods=['GET'])
